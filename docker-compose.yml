@@ -1,0 +1,29 @@
+version: '3' 
+
+services: 
+  flexget:  
+    image: wiserain/flexget
+    environment:
+      - FG_WEBUI_PASSWD=fgpass
+      - TORRENT_PLUGIN=transmission
+      - TZ=Europe/Madrid
+      - FG_LOG_LEVEL=info
+    volumes:
+      - ./movies:/movies
+      - ./config:/config
+    ports:
+      - 5050:5050
+    restart: unless-stopped
+    depends_on:
+      - transmission
+  transmission:
+    image: linuxserver/transmission
+    environment:
+      - TZ=Europe/Madrid
+      - USER=tmuser
+      - PASS=tmpass
+    ports:
+      - 9091:9091
+    restart: unless-stopped
+#  plex:
+#    image: plexinc/pms-docker
