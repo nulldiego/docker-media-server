@@ -1,7 +1,9 @@
+# TODO:
+## ShowRSS integration for TV Shows?
+## Se podrían eliminar entradas de la watchlist de trakt una vez descargada la película (a mí no me interesa, prefiero hacerlo manualmente)
+
 web_server: yes
-variables: 
-  - secrets.yml
-  - variables.yml
+variables: secrets.yml
 
 templates:
   transmission-anchor:
