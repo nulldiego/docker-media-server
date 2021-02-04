@@ -43,17 +43,17 @@ tasks:
 
   # task to download movies from the movie_list
   download-watchlist:
+    tmdb_lookup: yes
     priority: 10 # run after the movie queue fill task
     discover:
       what:
         - movie_list: watchlist
       from:
-        - piratebay:
-            category: highres movies
-        - limetorrents:
-            category: movies
+        - 1337x: yes
+        - piratebay: yes
+      limit: 10
       interval: 1 day
-    torrent_alive: 10 # Will reject results with less than 10 seeds
+    torrent_alive: 5 # Will reject results with less than 5 seeds
     quality: hdrip+ # Make sure no screeners or cams are downloaded
     list_match:
       from:
@@ -85,7 +85,7 @@ tasks:
       languages:
         - "{? subtitles.lang ?}"
       alternatives:
-        - "{? subtitles.alt-lang ?}"
+        - "{? subtitles.alt_lang ?}"
       exact_match: yes
       single: no
       providers: [opensubtitles, podnapisi]

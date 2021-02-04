@@ -3,8 +3,7 @@
 ## Features
 
 - Automatically download movies from watchlist in trakt.tv
-- Automatically download subtitles in spanish (configurable) from opensubtitles.org or podnapisi.net
-  - If spanish subtitles aren't available, download them in english
+- Automatically download subtitles in spanish and english (configurable) from [opensubtitles.org](https://opensubtitles.org) or [podnapisi.net](https://podnapisi.net)
 - Plex Media Server
 
 ---
@@ -23,14 +22,14 @@ Configure [secrets.yml](/config/secrets.yml) with valid credentials:
 
 ## Configuration
 
-Some configuration is available in [variables.yml](/config/secrets.yml):
+Besides service credentials, [secrets.yml](/config/secrets.yml) also contains configuration variables for trakt watchlist and subtitle languages:
 
 - *trakt*:
   - *user*: User who owns the watchlist
   - *list*: Name of the watchlist
 - *subtitles*:
   - *lang*: Language for subtitles
-  - *alt-lang*: Alternative language for subtitles
+  - *alt_lang*: Alternative language for subtitles
 
 ## Execution
 
