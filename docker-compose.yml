@@ -6,13 +6,13 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - WEB_PASSWD=fgpass
+      - WEB_PASSWD=${FLEXGET_PASS}
       - TORRENT_PLUGIN=transmission
       - TZ=Europe/Madrid
       - FLEXGET_LOG_LEVEL=info
     volumes:
-      - ./movies:/movies
-      - ./flexget/config:/config
+      - ${MOVIES}:/movies
+      - ${STORAGE}/flexget/config:/config
     ports:
       - 5050:5050
     restart: unless-stopped
@@ -24,10 +24,11 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - USER=tmuser
-      - PASS=tmpass
+      - USER=${TRANSMISSION_USER}
+      - PASS=${TRANSMISSION_PASS}
     volumes:
-      - ./movies:/movies
+      - ${MOVIES}:/movies
+      - ${STORAGE}/transmission/config:/config
     ports:
       - 9091:9091
     restart: unless-stopped
@@ -37,10 +38,10 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - PLEX_CLAIM=claim-plex
+      - PLEX_CLAIM=${PLEX_CLAIM}
       - VERSION=docker
     volumes:
-      - ./plex/config:/config
-      - ./movies:/movies
+      - ${STORAGE}/plex/config:/config
+      - ${MOVIES}:/movies
     network_mode: host
     restart: unless-stopped
