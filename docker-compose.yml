@@ -2,15 +2,17 @@ version: '3'
 
 services: 
   flexget:  
-    image: diegosl/flexget
+    image: cpoppema/docker-flexget
     environment:
-      - FG_WEBUI_PASSWD=fgpass
+      - PUID=1000
+      - PGID=1000
+      - WEB_PASSWD=fgpass
       - TORRENT_PLUGIN=transmission
       - TZ=Europe/Madrid
-      - FG_LOG_LEVEL=info
+      - FLEXGET_LOG_LEVEL=info
     volumes:
       - ./movies:/movies
-      - ./config:/config
+      - ./flexget/config:/config
     ports:
       - 5050:5050
     restart: unless-stopped
@@ -19,6 +21,8 @@ services:
   transmission:
     image: linuxserver/transmission
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=Europe/Madrid
       - USER=tmuser
       - PASS=tmpass
@@ -27,5 +31,16 @@ services:
     ports:
       - 9091:9091
     restart: unless-stopped
-#  plex:
-#    image: plexinc/pms-docker
+  plex:
+    image: linuxserver/plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - PLEX_CLAIM=claim-plex
+      - VERSION=docker
+    volumes:
+      - ./plex/config:/config
+      - ./movies:/movies
+    network_mode: host
+    restart: unless-stopped
