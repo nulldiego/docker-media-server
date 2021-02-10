@@ -20,7 +20,7 @@ Software:
 Configure [.env](/.env):
 
 - *MOVIES*: Directory for downloaded movies.
-- *STORAGE*: Directory for Plex Library, temporary files, databases, configuration...
+- *STORAGE*: Directory for Plex Library, temporary files, databases, configuration... **If you change it, remember to place `flexget`, `plex` and `transmission` folders there.**
 - *FLEXGET_PASS*: Password for Flexget Web UI.
 - *TRANSMISSION_USER*: User for transmission.
 - *TRANSMISSION_PASS*: Password for transmission.

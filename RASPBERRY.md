@@ -66,6 +66,8 @@ $ ssh pi
 
 Additionaly, it forwards some ports to your local machine for easier access. Ports 9091 (transmission), 5050 (flexget) and 32400 (plex) from Raspberry are now accesible from your local machine through 127.0.0.1:{port}.
 
+You may see some log errors if the Raspberry isn't using those ports yet.
+
 ## Docker
 
 Install Docker:
@@ -83,6 +85,12 @@ $ sudo usermod -aG docker pi
 
 Re login to enable docker permissions for user pi
 
+(Optional) Uncomment last line in `/etc/default/docker` to save temporal files to an external drive.
+
+```
+export DOCKER_TMPDIR="/mnt/seagate/docker-tmp"
+```
+
 ## docker-compose
 
 Install docker-compose:
@@ -95,10 +103,41 @@ $ sudo pip3 install docker-compose
 
 ## HDD
 
-Install drivers for HFS/NTFS file systems:
+Mount HDD. Remember to add UUID to stab file for auto-mount on startup.
+
+Look up HDD:
 
 ```bash
-$ sudo apt install -y ntfs-3g hfsutils hfsprogs exfat-fuse
+$ sudo su
+$ fdisk -l
 ```
 
-Mount HDD. Remember to add UUID to stab file for auto-mount on startup.
+Format HDD:
+
+```bash
+$ fdisk /dev/sda
+# remove partitions (d), create a new one (d) and save changes (w)
+$ mkfs.ext4 /dev/sda
+```
+
+Look up UUID of HDD:
+
+```bash
+$ ls -l /dev/disk/by-uuid/
+```
+
+Edit `/etc/fstab` and add the following line to mount HDD on startup:
+
+```
+UUID=your-disk-uuid       /mnt/seagate    ext4    defaults   0       0
+```
+
+Create the folder for mount (`/mnt/seagate` in this case).
+
+Run `mount -a` to mount HDD without restarting.
+
+Give permissions to user pi:
+
+```bash
+$ chown -R pi.pi /mnt/seagate
+```
