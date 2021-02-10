@@ -68,6 +68,20 @@ Additionaly, it forwards some ports to your local machine for easier access. Por
 
 You may see some log errors if the Raspberry isn't using those ports yet.
 
+## Sudo (not sure if needed)
+
+Add user to sudo group and don't require password for sudoers:
+
+```bash
+$ sudo usermod -a -G sudo pi
+```
+
+Edit `/etc/sudoers`:
+
+```
+%sudo   ALL=(ALL:ALL) NOPASSWD:ALL
+```
+
 ## Docker
 
 Install Docker:
@@ -80,7 +94,7 @@ $ sudo sh get-docker.sh
 Grant permission to user pi:
 
 ```bash
-$ sudo usermod -aG docker pi
+$ sudo usermod -a -G docker pi
 ```
 
 Re login to enable docker permissions for user pi
