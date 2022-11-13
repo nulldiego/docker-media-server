@@ -27,13 +27,15 @@ services:
       - USER=${TRANSMISSION_USER}
       - PASS=${TRANSMISSION_PASS}
     volumes:
+      - ${TV_SHOWS}:/tv-shows
       - ${MOVIES}:/movies
       - ${STORAGE}/transmission/config:/config
     ports:
       - 9091:9091
     restart: unless-stopped
+  # Plex (Media Streaming)
   plex:
-    image: linuxserver/plex
+    image: lscr.io/linuxserver/plex:latest
     environment:
       - PUID=1000
       - PGID=1000
@@ -41,7 +43,91 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
       - VERSION=docker
     volumes:
+      - ${TV_SHOWS}:/tv-shows
       - ${STORAGE}/plex/config:/config
       - ${MOVIES}:/movies
     network_mode: host
     restart: unless-stopped
+  # Overseerr (Media Discovery & Request Management) (:5055)
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/overseerr/config:/config
+    ports:
+      - 5050:5050
+    restart: unless-stopped
+  # Watchtower (Docker container base image updates)
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  # qBitTorrent (Torrent Download) (:8080) admin:adminadmin
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - WEBUI_PORT=8080
+    volumes:
+      - ${STORAGE}/qbittorrent/config:/config
+      - ${DOWNLOAD_SEEDING}:/downloads
+      - ${DOWNLOAD_MOVIES}:/movies
+      - ${DOWNLOAD_TV_SHOWS}:/tv-shows
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+  # Prowlarr (Torrent/Usenet indexer manager) (:9696)
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+  # Sonarr (TV Shows) (:8989)
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/sonarr/config:/config
+      - ${DOWNLOAD_TV_SHOWS}:/downloads
+      - ${TV_SHOWS}:/tv-shows
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+      - prowlarr
+  # Radarr (Movies) (:7878)
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/radarr/config:/config
+      - ${DOWNLOAD_MOVIES}:/downloads
+      - ${MOVIES}:/movies
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+      - prowlarr

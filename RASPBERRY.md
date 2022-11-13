@@ -130,7 +130,7 @@ Format HDD:
 
 ```bash
 $ fdisk /dev/sda
-# remove partitions (d), create a new one (d) and save changes (w)
+# remove partitions (d), create a new one (n) and save changes (w)
 $ mkfs.ext4 /dev/sda
 ```
 
