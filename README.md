@@ -1,3 +1,7 @@
+## Update
+
+I have changed many things since I originally wrote this readme. I don't use Flexget or Transmission anymore and I'm using the *arr ecosystem to manage everything. You can check the updated docker-compose file.
+
 # Dockerized Media Server
 
 Media Server originally built for execution on Raspberry Pi

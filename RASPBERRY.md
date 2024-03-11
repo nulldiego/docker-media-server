@@ -155,3 +155,6 @@ Give permissions to user pi:
 ```bash
 $ chown -R pi.pi /mnt/seagate
 ```
+
+## Samba
+Follow https://pimylifeup.com/raspberry-pi-samba/

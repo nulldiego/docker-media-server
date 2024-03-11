@@ -1,41 +1,15 @@
 version: '3' 
 
 services: 
-  flexget:  
-    image: cpoppema/docker-flexget
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - WEB_PASSWD=${FLEXGET_PASS}
-      - TORRENT_PLUGIN=transmission
-      - TZ=Europe/Madrid
-      - FLEXGET_LOG_LEVEL=info
+  # Watchtower (Docker container base image updates)
+  watchtower:
+    image: containrrr/watchtower
     volumes:
-      - ${MOVIES}:/movies
-      - ${STORAGE}/flexget/config:/config
-    ports:
-      - 5050:5050
-    restart: unless-stopped
-    depends_on:
-      - transmission
-  transmission:
-    image: linuxserver/transmission
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - USER=${TRANSMISSION_USER}
-      - PASS=${TRANSMISSION_PASS}
-    volumes:
-      - ${TV_SHOWS}:/tv-shows
-      - ${MOVIES}:/movies
-      - ${STORAGE}/transmission/config:/config
-    ports:
-      - 9091:9091
-    restart: unless-stopped
+      - /var/run/docker.sock:/var/run/docker.sock
   # Plex (Media Streaming)
   plex:
     image: lscr.io/linuxserver/plex:latest
+    container_name: plex
     environment:
       - PUID=1000
       - PGID=1000
@@ -43,14 +17,15 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
       - VERSION=docker
     volumes:
-      - ${TV_SHOWS}:/tv-shows
+      - ${MOVIES}:/data/movies
+      - ${TV_SHOWS}:/data/tv-shows
       - ${STORAGE}/plex/config:/config
-      - ${MOVIES}:/movies
     network_mode: host
     restart: unless-stopped
   # Overseerr (Media Discovery & Request Management) (:5055)
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
     environment:
       - PUID=1000
       - PGID=1000
@@ -58,16 +33,16 @@ services:
     volumes:
       - ${STORAGE}/overseerr/config:/config
     ports:
-      - 5050:5050
+      - 5055:5055
     restart: unless-stopped
-  # Watchtower (Docker container base image updates)
-  watchtower:
-    image: containrrr/watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - plex
+      - radarr
+      - sonarr
   # qBitTorrent (Torrent Download) (:8080) admin:adminadmin
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
     environment:
       - PUID=1000
       - PGID=1000
@@ -75,9 +50,12 @@ services:
       - WEBUI_PORT=8080
     volumes:
       - ${STORAGE}/qbittorrent/config:/config
-      - ${DOWNLOAD_SEEDING}:/downloads
-      - ${DOWNLOAD_MOVIES}:/movies
-      - ${DOWNLOAD_TV_SHOWS}:/tv-shows
+      - ${DOWNLOAD_SEEDING}:/data/downloads/seeding
+      - ${DOWNLOAD_MOVIES}:/data/downloads/movies
+      - ${DOWNLOAD_TV_SHOWS}:/data/downloads/tv-shows
+      - ${DOWNLOAD_AUDIOBOOKS}:/data/downloads/audiobooks
+      - ${SWITCH_GAMES}:/data/downloads/switch
+      - ${BOOKS}:/data/downloads/books
     ports:
       - 8080:8080
       - 6881:6881
@@ -86,6 +64,7 @@ services:
   # Prowlarr (Torrent/Usenet indexer manager) (:9696)
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
     environment:
       - PUID=1000
       - PGID=1000
@@ -100,34 +79,122 @@ services:
   # Sonarr (TV Shows) (:8989)
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
       - ${STORAGE}/sonarr/config:/config
-      - ${DOWNLOAD_TV_SHOWS}:/downloads
-      - ${TV_SHOWS}:/tv-shows
+      - ${DOWNLOAD_TV_SHOWS}:/data/downloads/tv-shows
+      - ${TV_SHOWS}:/data/tv-shows
     ports:
       - 8989:8989
     restart: unless-stopped
     depends_on:
-      - qbittorrent
       - prowlarr
   # Radarr (Movies) (:7878)
   radarr:
     image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
       - ${STORAGE}/radarr/config:/config
-      - ${DOWNLOAD_MOVIES}:/downloads
-      - ${MOVIES}:/movies
+      - ${DOWNLOAD_MOVIES}:/data/downloads/movies
+      - ${MOVIES}:/data/movies
     ports:
       - 7878:7878
     restart: unless-stopped
     depends_on:
-      - qbittorrent
       - prowlarr
+  # Flaresolverr (Proxy server to bypass CloudFlare) (:8191)
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - TZ=Europe/Madrid
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+  # Bazarr (Subtitles) (:6767)
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/bazarr/config:/config
+      - ${MOVIES}:/data/movies
+      - ${TV_SHOWS}:/data/tv-shows
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+  # Readarr (Audiobooks) (:8787)
+  audio-readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: audio-readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/audio-readarr/config:/config
+      - ${DOWNLOAD_AUDIOBOOKS}:/data/downloads/audiobooks
+      - ${AUDIOBOOKS}:/data/audiobooks
+    ports:
+      - 8787:8787
+    restart: unless-stopped
+    depends_on:
+      - prowlarr
+  # Audiobookshelf (Audiobook streaming) (:13378)
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/audiobookshelf/config:/config
+      - ${STORAGE}/audiobookshelf/metadata:/metadata
+      - ${AUDIOBOOKS}:/audiobooks
+    ports:
+      - 13378:80
+    restart: unless-stopped
+  # Plex Meta Manager (Extra Metadata for Plex)
+  plex-meta-manager:
+    image: lscr.io/linuxserver/plex-meta-manager:latest
+    container_name: plex-meta-manager
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - ${STORAGE}/plexmeta/config:/config
+    restart: unless-stopped
+  # Mealie (Recipes) (:9925)
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - ALLOW_SIGNUP=true
+      - MAX_WORKERS=1
+      - WEB_CONCURRENCY=1
+      - BASE_URL=http://diegoflix.zapto.org:9925
+    ports:
+        - 9925:9000
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
+    volumes:
+      - ${STORAGE}/mealie:/app/data/
+    restart: unless-stopped
