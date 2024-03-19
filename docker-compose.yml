@@ -55,11 +55,13 @@ services:
       - ${DOWNLOAD_TV_SHOWS}:/data/downloads/tv-shows
       - ${DOWNLOAD_AUDIOBOOKS}:/data/downloads/audiobooks
       - ${SWITCH_GAMES}:/data/downloads/switch
-      - ${BOOKS}:/data/downloads/books
+      - ${DOWNLOAD_BOOKS}:/data/downloads/books
     ports:
       - 8080:8080
       - 6881:6881
       - 6881:6881/udp
+      - 54673:54673
+      - 54673:54673/udp
     restart: unless-stopped
   # Prowlarr (Torrent/Usenet indexer manager) (:9696)
   prowlarr:
@@ -134,23 +136,6 @@ services:
     ports:
       - 6767:6767
     restart: unless-stopped
-  # Readarr (Audiobooks) (:8787)
-  audio-readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    container_name: audio-readarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-    volumes:
-      - ${STORAGE}/audio-readarr/config:/config
-      - ${DOWNLOAD_AUDIOBOOKS}:/data/downloads/audiobooks
-      - ${AUDIOBOOKS}:/data/audiobooks
-    ports:
-      - 8787:8787
-    restart: unless-stopped
-    depends_on:
-      - prowlarr
   # Audiobookshelf (Audiobook streaming) (:13378)
   audiobookshelf:
     image: ghcr.io/advplyr/audiobookshelf:latest
@@ -163,6 +148,7 @@ services:
       - ${STORAGE}/audiobookshelf/config:/config
       - ${STORAGE}/audiobookshelf/metadata:/metadata
       - ${AUDIOBOOKS}:/audiobooks
+      - ${PODCASTS}:/podcasts
     ports:
       - 13378:80
     restart: unless-stopped
